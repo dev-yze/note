@@ -2,8 +2,6 @@
 
 ​	默认安装路径为:  /usr/libexec/git-core
 
-​	
-
 ```
 // 下载
 [root@yang develop]# wget https://github.com/git/git/archive/v2.22.0.tar.gz
@@ -28,8 +26,4 @@ git --version
 
 ```
 
-
-
 二、使用yum安装
-
-/ucd 
