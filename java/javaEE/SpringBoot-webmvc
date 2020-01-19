@@ -1,0 +1,178 @@
+### 一、实例
+
+
+
+
+
+### 二、常用注解详解
+
+#### 1、@SpringBootApplication
+
+​	SpringBoot提供了一个统一的注解@SpringBootApplication,整合了@SpringBootConfiguration + @EnableAutoConfiguration + @ComponentScan
+
+```java
+@Target({ElementType.TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Inherited
+@SpringBootConfiguration
+@EnableAutoConfiguration
+@ComponentScan(
+    excludeFilters = {@Filter(
+    type = FilterType.CUSTOM,
+    classes = {TypeExcludeFilter.class}
+), @Filter(
+    type = FilterType.CUSTOM,
+    classes = {AutoConfigurationExcludeFilter.class}
+)}
+)
+public @interface SpringBootApplication {}
+```
+
+- @SpringBootConfiguration
+
+  相当于@Configuration,为SpringBoot创建一个Spring配置类，来代替相应的xml配置文件
+
+  
+
+- @EnableAutoConfiguration
+
+  能够自动配置Spring的上下文，配置所需要的bean,通常会根据类路径和bean定义自动配置
+
+- @ComponentScan
+
+  会自动扫描指定包下全部标有@Component的类，并注册成bean,当然包括@Component下的子注解@Service、@Controller、@Respository
+
+#### 2、@RestController
+
+​	@RestController相当于注解@ResponseBody和@Controller合在一起的作用，返回的是将return里的内容JSON化
+
+- @Controller：在对应方法上，视图解析器可以解析return返回的jsp、html页面，并跳转到相应页面上
+
+- @ResponseBody：若返回json等内容到页面上，则需要加@ResponseBody注解
+
+- @RestController：相当于@Controller+@ResponseBody两个注解的结合，返回json数据不需要在方法前面加@ResponseBody注解了，但是使用了@RestController注解，就不能返回jsp，html页面，视图解析器无法解析jsp,html页面
+
+  
+
+#### 3、@RequestMapping
+
+​	@RequestMapping将请求uri和处理方法映射起来，即注册映射请求路径，可以定义到类或方法上
+
+​	@RequestMapping根据具体的请求方法还可以替换成如下注解
+
+​			##@GetMapping
+
+​				 @PostMapping
+
+​				 @PutMapping
+
+​				 @DeleteMapping
+
+​				 @PatchMapping
+
+- ##### value值，method类型，params
+
+  - 单映射与多映射
+
+    ```java
+        @RequestMapping(value = "test", method = { RequestMethod.GET, RequestMethod.POST })
+        public String TestRequest() {
+            return "connect success";
+        }
+     @RequestMapping(value = { "test1", "test2" }, method = { RequestMethod.GET, RequestMethod.POST })
+        public String TestRequest1() {
+            return "test1 test2 connect success";
+        }
+    ```
+
+  - Ant风格URL映射
+
+    Ant通配符有3种：
+
+    | 通配符 | 说明               |
+    | ------ | ------------------ |
+    | ?      | 匹配任何单字符     |
+    | *      | 匹配任意数量的字符 |
+    | **     | 匹配任意数量的目录 |
+
+    ```java
+        @RequestMapping(value = { "/?/test1" }, method = { RequestMethod.GET, RequestMethod.POST })
+        public String TestRequest21() {
+            return "/?/test1 connect success";
+        }
+    
+        @RequestMapping(value = { "/*/test1" }, method = { RequestMethod.GET, RequestMethod.POST })
+        public String TestRequest22() {
+            return "/*/test1 connect success";
+        }
+    
+        @RequestMapping(value = { "/**/test1" }, method = { RequestMethod.GET, RequestMethod.POST })
+        public String TestRequest23() {
+            return " /**/test1 connect success";
+        }
+    
+    ```
+
+  
+
+  - 占位符映射
+
+    URL中可以通过一个或多个{}占位符映射
+
+    如：@RequestMapping("user/{userId}/getShopIds")
+
+    可以通过PathVariable("")注解将占位符的值绑定到方法参数上
+
+    ```java
+    	/**
+         * 测试占位符映射,做绑定时可以根据自己的需求将方法参数类型设为Long,Integer,String
+         * @return
+         */
+        @RequestMapping(value = { "/{userId}/test3" }, method = { RequestMethod.GET, RequestMethod.POST })
+        public String TestRequest3(@PathVariable(value = "userId") Long userId) {
+            return "测试占位符映射" + userId;
+        }
+    ```
+
+  - 限制请求方法URL映射
+
+    在http请求中最常用的方法是GET,POST,还有其它的，如HEAD,PUT,OPTIONS,PATCH,TRACE,DELETE等
+
+    可以指定请求方法类型类限制请求
+
+  - 限制请求参数URL映射
+
+    限制请求参数来映射URL,请求必须带限定的参数,例如：
+
+     @RequestMapping(value="/user/show", params="userId") 
+
+    ```
+    /**
+         * 测试限定URL参数请求(http://localhost:8080/connection/test5?userId=5)
+         * @return
+         */
+        @RequestMapping(value = { "/test5" }, params = "userId", method = { RequestMethod.GET, RequestMethod.POST })
+        public String TestRequest5(@RequestParam(value = "userId") Long userId) {
+            return "限定参数请求" + userId;
+        }
+    ```
+
+- ##### consumes, produces
+
+  consumes: 指定处理请求的提交内容类型（Content-Type）,例如application/json,text/html
+
+  produces: 指定返回的内容类型，仅当request请求头中的Accept类型中包含该指定类型才返回
+
+
+
+
+
+
+
+
+
+- ##### headers
+
+
+
