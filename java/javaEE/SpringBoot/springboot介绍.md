@@ -10,9 +10,5 @@ Spring Boot框架是用于简化Spring应用从搭建到开发的过程。应用
 
 3、Spring Boot WebFlux
 
-​		大多数场景使用MVC都是阻塞式的，WebFlux使用的场景是异步非阻塞式的。
-
-​		响应式编程：响应式编程是基于异步和时间驱动的非阻塞程序，只是垂直通过JVM内启动少量线程扩展，而不是水平通过集群扩展
-
-​		Spring Boot 2.0包括一个新的Spring-webflux模块，该模块包含对响应式HTTP和WebSocket客户端的支持，以及对REST, HTML和websocket交互等程序的支持
+​		
 

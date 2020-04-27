@@ -1,223 +1,301 @@
-### 一、代理模式
+#### 一、AOP概述
 
-​		代理模式：代理模式是23种设计模式的一种，他是指一个对象A通过持有另一个对象B，可以具有B同样的行为模式，为了对外开放模式，B往往实现了一个接口，而A也会去实现这个接口，但B是真正实现类，A比较虚，他借用了B的方法去实现接口的方法。A虽然是“伪军"，但它可以增强B，在调用B的前后做些其它的事情。SpringAOP就是使用了动态代理完成了代码的动态”织入“。
+AOP: Aspect Oriented Programming, 面向切面编程，将非核心业务如日志等从不同的纵向操作中抽取出来。
 
-使用代理的好处：
+AOP是通过代理的方式在业务处理方法前后增强
 
-​		如果一个工程依赖另一个工程的接口，但是另一个工程的接口不稳定，经常变更协议，就使用一个代理，接口变更时，只需要修改代理，不需要修改业务代码，从这个意义上说，所有调用外界的接口，我们都可以这么做，不让外界的代码对我们有入侵，这叫防御式编程，代理其他的应用可能还有很多。
+代理一般有静态代理和动态代理：静态代理、JDK动态代理、CGLIB动态代理
 
-代理的类型：如果上面类A写死持有B，就是B的静态代理，如果A代理的对象是不确定的，就是动态代理.
+##### 1、JDK动态代理
 
-​	静态代理：由程序员或特定工具自动生成源代码再对其编译，在程序运行前代理类的.class文件就存在了，
+​		JDK动态代理基于接口
 
-​	动态代理：在程序运行时用反射机制动态创建而成
+##### 2、CGLIB动态代理
 
-#### 1、静态代理
+#### 二、AOP实现
 
-​		在代理对象中引用目标对象且实现目标对象所实现的接口，在实现的接口方法中调用目标对象相同的实现方法，调用前后可进行日志拦截、数据统计、权限验证等操作。
+##### 1、使用ProxyFactoryBean
 
-#### 2、JDK动态代理
-
-通过java.lang.reflect.Proxy类的静态方法newProxyInstance生成代理对象
-
-```java
-/**
-* loader:目标类的类加载器
-* interfaces: 目标类实现的全部接口
-* invocationHandler h:得到InvocationHandler接口的子类的实例
-*/
-public static Object newProxyInstance(ClassLoader loader,
-                                          Class<?>[] interfaces,
-                                          InvocationHandler h)
-        throws IllegalArgumentException{};
-```
-
-代理工厂实现java.lang.reflect.InvocationHandler接口
+- 编写和实现业务接口
+- 编写通知类实现MethodInterceptor接口，实现invoke方法
+- 配置ProxyFactoryBean
 
 ```java
-package java.lang.reflect;
-
-public interface InvocationHandler {
-
-    /**
-     * proxy : 被代理的对象
-     * method ： 要调用的方法
-     * args : 方法调用时所需的参数
-     */
-
-    public Object invoke(Object proxy, Method method, Object[] args)
-        throws Throwable;
-}
-
-```
-
-```java
-package course09_proxy.type.jdkproxy;
-
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
-
-public class LogHandler implements InvocationHandler {
-	
-	private Object targetObject;
-	
-	public Object newProxyInstance(Object targetObject) {
-		this.targetObject = targetObject;
-		return Proxy.newProxyInstance(targetObject.getClass().getClassLoader(), targetObject.getClass().getInterfaces(), this);
-	}
-
+// 业务类省略.....
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import org.aopalliance.intercept.MethodInterceptor;
+import org.aopalliance.intercept.MethodInvocation;
+import org.springframework.stereotype.Component;
+// 通知
+@Component
+public class AopLogServiceImpl implements MethodInterceptor {
+	private SimpleDateFormat sd = new SimpleDateFormat("yyyy-mm-dd HH:mm:dd");	
 	@Override
-	public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+	public Object invoke(MethodInvocation tar) throws Throwable {
 		// TODO Auto-generated method stub
-		System.out.println("日志开始--------->");
-		for (int i = 0; i < args.length; i++) {
-			System.out.println(args[i]);
-		}
-		Object ret = null;
-		try {
-			System.out.println("打印日志----------------------------------");
-//			System.out.println(proxy);
-			ret = method.invoke(targetObject, args);
-			System.out.println("操作成功-----------------------------------");
-		} catch (Exception e) {
-			// TODO: handle exception
-			e.printStackTrace();
-			System.out.println("error----异常" + "\n" + e);
-			throw e;
-		}
-		return ret;
-	}
-}
-
-package course09_proxy.type.jdkproxy;
-import course09_proxy.type.service.UserManagerService;
-import course09_proxy.type.service.impl.UserManagerServiceImpl;
-public class ProxyTest {
-	public static void main(String[] args) {
-		LogHandler logHandler = new LogHandler();
-		UserManagerService userManagerService = (UserManagerService)logHandler.newProxyInstance(new UserManagerServiceImpl());
-		userManagerService.addUser(111, "张三");
+		System.out.println("【" + sd.format(new Date()) + "】方法执行开始");
+		Object obj = tar.proceed();
+		System.out.println("【" + sd.format(new Date()) + "】方法执行结束");
+		return obj;
 	}
 	
 }
+```
 
+```
+// xml配置
+
+<!-- 扫描组件 -->		
+	<context:component-scan base-package="com.spring.dev"></context:component-scan>
+	<!--
+		配置proxyFactoryBean属性
+			1、配置代理接口  proxyInterfaces
+			2、代理接口实现类  target
+			3、通知   interceptorNames
+	-->
+	<bean id="proxyFactoryBean" class="org.springframework.aop.framework.ProxyFactoryBean">
+		<property name="proxyInterfaces">
+			<value>com.spring.dev.service.user.UserService</value>
+		</property>
+		<property name="target">
+			<ref bean="userServiceImpl" />
+		</property>
+		<property name="interceptorNames">
+			<list>
+				<value>aopLogServiceImpl</value>
+			</list>
+		</property>
+	</bean>
+```
+
+2、
+
+#### 三、AspectJ
+
+##### 1、简介
+
+​		AspectJ: java社区里最完整最流行的AOP框架
+
+​		在Spring2.0版本以上，可以使用基于AspectJ注解或基于XML配置的AOP
+
+##### 2、Spring中启用AspectJ注解支持
+
+- 导入jar包
+
+- 引入命名空间
+
+- 配置
+
+  ```
+  <aop:aspectj-autoproxy></aop:aspectj-autoproxy>
+  ```
+
+  当SpringIOC容器侦测到bean配置文件中的<aop:aspectj-autoproxy>元素时，会自动为与AspectJ切面相匹配的bean创建代理
+
+##### 3、用AspectJ注解声明切面
+
+- SpringIOC容器中声明AspectJ切面，首先将切面声明为Bean实例，然后使用@Aspect注解将该类声明为切面
+- AspectJ中包含许多通知，通知是带有某种注解的方法，根据注解在不同时间段执行，来增强业务方法
+- AspectJ支持5种类型的注解
+  - @Before : 前置增强通知, 在方法执行之前执行
+  - @After : 后置通知，在方法执行之后执行
+  - @AfterReturning : 后置增强通知
+  - @AfterThrowing ：异常通知，在方法抛出异常后执行
+  - @Around ： 环绕通知，围绕着方法执行
+
+4、AspectJ使用
+
+```
+package com.spring.dev.common.log;
+import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.After;
+import org.aspectj.lang.annotation.AfterReturning;
+import org.aspectj.lang.annotation.AfterThrowing;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Before;
+import org.aspectj.lang.annotation.Pointcut;
+import org.springframework.stereotype.Component;
+@Component
+@Aspect
+public class LogServiceImpl {	
+	/**
+	 * 切入点
+	 */
+	@Pointcut("execution(* com.spring.dev.service.*.*.*(..))")
+	public void pointCut() {
+	}
+	/**
+	 * 前置通知
+	 */
+	@Before("pointCut()")
+	public void before(JoinPoint joinPoint) {
+		System.out.println("【Log before】 方法执行之前" + joinPoint.getSignature().getName());
+	}
+	/**
+	 * 后置通知
+	 */
+	@After("pointCut()")
+	public void after() {
+		System.out.println("【Log after】 方法执行之后");
+	}
+	/**
+	 * 后置增强
+	 */
+	@AfterReturning("pointCut()")
+	public void afterReturning() {
+		System.out.println("【Log afterReturning】 方法执行之后");
+	}
+	/**
+	 * 环绕通知
+	 */
+	@Around("pointCut()")
+	public int around(ProceedingJoinPoint joinPoint) {
+		try {
+			System.out.println("【log around】 开始");
+			joinPoint.proceed();
+			System.out.println("【log around】 结束");
+		} catch (Throwable e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return 0;
+	}
+	/**
+	 * 抛出异常
+	 */
+	@AfterThrowing("pointCut()")
+	public void afterThrowing() {
+		System.out.println("【Log afterThrowing】 方法执行之后");
+	}
+}
+```
+
+执行结果:
+
+![image-20200401135913175](C:\Users\18856\AppData\Roaming\Typora\typora-user-images\image-20200401135913175.png)
+
+
+
+#### 四、AOP概念详解
+
+##### 1、切入点表达式
+
+​	作用：通过表达式的方式**定位**一个或多个具体的**连接点**
+
+###### 	1）切入点表达式语法
+
+```
+execution([权限修饰符][返回值类型][简单类名/全类名][方法名](参数列表))
+```
+
+​	2）案例
+
+| 表达式 | execution(***** com.atguigu.spring.ArithmeticCalculator.*****(**..**)) |
+| ------ | ------------------------------------------------------------ |
+| 含义   | 匹配`ArithmeticCalculator`接口种声明的所有方法                                                                                   第一个\*代表任意修饰符及任意返回值                                                                                                                   第二个\*表任意方法                                                                                                                                                      ..匹配任意数量、类型参数                                                                                                                                       若目标类、接口与该切面在同一个包种可以省略包名 |
+
+
+
+##### 2、连接点细节（JoinPoint）
+
+###### 1）概念
+
+​		切入点表达式通常都是宏观上定位一组方法，和具体某个通知的注解结合起来就能够确定对应的连接点。就一个具体的连接点而言，我们关心这个连接点的一些具体信息，如，当前连接点所在方法的方法名、当前传入的参数值等。这些信息都封装在`JointPoint`接口的实例对象中
+
+###### 2）JoinPoint
+
+<img src="C:\Users\18856\AppData\Roaming\Typora\typora-user-images\image-20200401142120807.png" alt="image-20200401142120807" style="zoom: 67%;" />
+
+
+
+![image-20200401131246820](C:\Users\18856\AppData\Roaming\Typora\typora-user-images\image-20200401131246820.png)
+
+###### 3）ProceedingJoinPoint
+
+
+
+##### 3、通知
+
+###### 1）概述
+
+- 在具体的连接点上要执行的操作
+- 一个切面可以包含多个通知
+- 通知所使用的注解的值往往是切入点表达式
+
+###### 2）前置通知
+
+###### 3）后置通知
+
+###### 4）返回通知
+
+###### 5）异常通知
+
+###### 6）环绕通知
+
+- 环绕通知是所有通知中功能最为强大的，能全面地控制连接点，甚至可以控制是否执行连接点
+- 对于环绕通知来说，连接点的参数类型必须是ProceedingJoinPoint,它是JoinPoint的子接口，允许控制何时执行，是否执行连接点
+- 在环绕通知中需要明确调用ProceedingJoinPoint的proceed()方法来执行被代理的方法。如果忘记会导致通知执行了，而代理方法未执行
+- 注意：环绕通知需要返回目标方法执行后的结果，即调用proceedingJoinPoint.proceed()的返回值，否则出现空指针异常
+
+##### 4、切入点表达式重复使用
+
+1. 在编写AspectJ切面时，可以直接在通知注解中写入切入点表达式，但同一个切点表达式可能会在多个通知中重复出现
+2. 在AspectJ切面中，可以通过@Pointcut注解将一个切入点声明成简单的方法，切入点的方法体通常是空的，因为将切入点定义未应用程序逻辑混在一起不合理
+3. 切入点方法的访问控制符同时也控制着这个切入点的可见性。如果切入点要在多个切面中共用，最好将它们集中在一个公共的类中，在这种情况下，它们必须声明为public。在引入这个切入点时，必须将类名也包括在内。如果没有与这个切面放在同一个包中，还必须包含包名
+4. 其他通知可以通过方法名称引入该切入点
+
+```java
+// 定义公共切入点类
+package com.spring.dev.common.log;
+import org.aspectj.lang.annotation.Pointcut;
+public class LogPointCut {
+	/**
+	 * 新增类方法切入点
+	 */
+	@Pointcut("execution(* *.add*(..))")
+	public void add() {}
+}
+
+// 引用切入点类切入点
+	/**
+	 * 前置通知
+	 */
+	@Before("com.spring.dev.common.log.LogPointCut.add()")
+	public void before(JoinPoint joinPoint) {
+		System.out.println("【Log before】 方法执行之前" + joinPoint.getSignature().getName());
+	}
 ```
 
 
 
-#### 3、CGLIB动态代理
+##### 5、指定切面的优先级
 
-- 创建目标类（业务类）
+- 在同一个连接点上应用不止一个切面时，除非明确指定，否则它们的优先级不确定
+- 切面的优先级可以通过实现Ordered接口或利用@Order注解指定
+- 实现Ordered接口，getOrder()方法的返回值越小优先级越高
+- 若使用@Order注解，序号出现在注解中
 
-- 创建拦截器，实现`net.sf.cglib.proxy.MethodInterceptor`接口
-
-- 通过Enhancer类实例对象将目标类和拦截类，织入，创建代理类
-
-  ```
-  import java.lang.reflect.Method;
-  import net.sf.cglib.proxy.MethodInterceptor;
-  import net.sf.cglib.proxy.MethodProxy;
-  /**
-   * @description
-   * @author zhangen.yang
-   * @date: 2019年12月29日下午12:15:21
-   */
-  public class UserManagerServiceImplInterceptor implements MethodInterceptor {
-  	/**
-  	 * 拦截器
-  	 * @description
-  	 * @param o			要增强的对象
-  	 * @param method	拦截的方法
-  	 * @param objects	参数列表
-  	 * @param methodProxy	方法的代理
-  	 * @return
-  	 * @throws Throwable
-  	 */
-  	@Override
-  	public Object intercept(Object o, Method method, Object[] objects, MethodProxy methodProxy) throws Throwable {
-  		// TODO Auto-generated method stub
-  		System.out.println("--------------方法调用前处理--------------");
-  		Object object = methodProxy.invokeSuper(o, objects);
-  		System.out.println("---------调用后处理---------");
-  		return object;
-  	}
-  }
-  
-  import net.sf.cglib.proxy.Enhancer;
-  /** 测试生成代理
-   * @description
-   * @author zhangen.yang
-   * @date: 2019年12月29日下午12:23:02
-   */
-  public class ProxyTest {
-  	public static void main(String[] args) {
-  		Enhancer enhancer = new Enhancer();
-  		enhancer.setSuperclass(UserManagerServiceImpl.class);
-  		enhancer.setCallback(new UserManagerServiceImplInterceptor());
-  		UserManagerServiceImpl userManagerServiceImpl = (UserManagerServiceImpl) enhancer.create();
-  		userManagerServiceImpl.addUser(222, "张三");
-  	}
-  }
-  
-  
-  
-  ```
-
-### 二、AOP联盟
-
-#### 1、AOP简介
-
-​	AOP面向切面编程是一种编程技术，可以增强现有的中间环境或开发环境,是面向对象编程OOP的一种补充和完善。
-
-​	AOP联盟定义了一套用于规范AOP实现的底层API，通过这些统一的底层的API，可以使各个AOP实现工具之间实现相互兼容，现在AOP联盟已有几个项目提供了AOP相关的技术，如通用代理，拦截器或字节码转换器
-
-- ASM 轻量级字节码转换器
-- AspectJ: 一个面向切面的框架，扩展了Java语言
-- AspectWerkz： 一个面向切面的框架，基于字节码级别的动态织入和撇脂
-- BCEL: 字节码转换器
-- CGLIB：用于类工件操作和方法拦截的高级API
-- Javassist:  具有高级API的字节码转换器
-- JBoss-AOP:  拦截和基于元数据的AO框架
+五、用XML配置切面
 
 
 
-AOP将软件系统分为两部分:核心罗杰和横切逻辑。核心逻辑主要处理系统正常的业务逻辑，
 
-横切逻辑不关注系统核心逻辑，其只关注与系统核心逻辑并非强相关的逻辑，如日志、权限控制等。
 
-#### 2、AOP相关概念
+增强类型
 
-- ​	横切关注点
-- 切面(Aspect)
-- 连接点(JoinPoint)
-- 切入点(PointCut)
-- 通知(Advice)
-- 目标对象(Target Object)
-- 织入(Weaving)
-- 引入(Introduction)
+AOP联盟定义了org.aopalliance.aop.Advice接口，Spring支持5种类型的增强，Spring AOP支持很懂增强类型，Spring AOP按增强类型在目标方法中的连接点位置可以分为5种
 
-#### 3、SpringAOP的实现
+- 前置增强
+- 后置增强
+- 环绕增强
+- 异常抛出增强
+- 引介增强
 
-（1）通过jdk动态代理实现
+前置增强
 
 
 
-（2）通过cglib实现
-
-
-
-#### 4、增强类型
-
-
-
-#### 5、切入点类型
-
-
-
-### 三、Spring集成AspectJ
-
-
-
-### 四、SpringAOP实现原理
-
+​	![image-20200401131246820](C:\Users\18856\AppData\Roaming\Typora\typora-user-images\image-20200401131246820.png)

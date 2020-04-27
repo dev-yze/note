@@ -16,9 +16,7 @@
 [root@yang git-2.22.0]# make prefix=/usr/local/git install
 // 配置环境变量
 vim /etc/profile
-加入
-PATH=$PATH:/usr/local/git/bin
-export PATH
+
 // 更新源文件
 [root@yang git-2.22.0]#source /etc/profile
 // 查看git版本
