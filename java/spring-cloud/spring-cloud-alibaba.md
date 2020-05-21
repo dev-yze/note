@@ -84,3 +84,14 @@ linux安装
 
 ### 二、Sentinel
 
+流量控制、熔断降级、系统负载保护
+
+
+
+整合feign
+
+​	添加依赖
+
+​	修改配置文件
+
+​	启动类开启注解@EnableFeignClients

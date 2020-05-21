@@ -6,4 +6,7 @@
 | ctrl+shift+Space     | 补全上下文信息           |
 | (ctrl+shift+Space)*2 | 链式补全，相关引用属性值 |
 | alt+ins              | 在导航栏新建条目         |
+| alt+7                | 查看类方法、属性         |
+| ctrl+H               | 查看类的继承关系         |
+| ctrl + alt + v       | 自动补全返回值           |
 
