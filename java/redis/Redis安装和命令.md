@@ -57,7 +57,7 @@
 	ps -ef|grep redis
 3、检测端口是否在监听
 	netstat -lntp | grep 6379
-4、关闭redis
+4、关闭redis(在客户端关闭fu'wu)
 	redis-cli shutdown
 ```
 
