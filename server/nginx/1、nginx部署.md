@@ -6,13 +6,6 @@
 ps -ef|grep nginx
 ```
 
-```
-1、安装编译工具及库文件
-yum -y install make zlib zlib-devel gcc-c++ libtool  openssl openssl-devel
-2、安装pcre,让nginx支持Rewrite功能
-
-```
-
 ##### 1、安装编译工具及库文件
 
 ```
