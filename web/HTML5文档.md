@@ -8,10 +8,6 @@
 
 ##### 1）标记方法
 
-- 内容类型
-
-  文件扩展符与内容类型保持不变，扩展夫为'.html'或'.htm'，内容类型为(ContentType)仍为'text/html'
-
 - DOCTYPE声明
 
   改变，不用声明版本,不区分大小小，不区分单双引号
@@ -42,6 +38,7 @@
 ##### 2）确保兼容性
 
 - 可以省略标记的元素
+
   - 不允许写结束标记
 
   area、base、br、col、command、embed、hr、img、input、keygen、link、meta、param、source、track、wbr
@@ -135,10 +132,113 @@
 
 #### 4、全局属性
 
-​	
+#### 
 
-#### 5、新增事件
+# HTML头部
+
+## (一) DOCTYPE声明
+
+改变，不用声明版本,不区分大小小，不区分单双引号
+
+```html
+<!DOCTYPE html>
+```
+
+使用工具时，也可以在DOCTYPE声明中加入SYSTEM识别符，声明如下：
+
+```
+<!DOCTYPE HTML SYSTEM "about:legacy-compat">
+```
+
+​	识别符和html引用传统dtd差不多，legacy-compat表示传统的html文档类型定义
+
+## (二) 指定字符编码
+
+用meta元素指定字符编码
+
+```html
+<!-- h4 -->
+<meta http-equiv="Content-Type" content="text/html;chartset=UTF-8">
+<!-- h5-->
+<meta chartset="UTF-8">
+```
+
+## (三) 引用style和js
+
+```html
+<script src='jsname.js'></script>
+<link rel="stylesheet" href="cssFileName.css">
+```
 
 
 
-#### 6、只监听一次事件
+# 结构标签
+
+## (1) div
+
+## (2) article
+
+## (3) section
+
+## (4) nav
+
+## (5) aside
+
+## (6) time
+
+## (7) pubdate
+
+# 表单标签
+
+# 文件
+
+# 本地存储
+
+# XMLHttpRequest及Fetch
+
+# webWorkers处理线程
+
+# ServiceWorker
+
+# 通信API
+
+# web组件
+
+# 图形绘制
+
+# 多媒体API
+
+# 扩展
+
+
+
+
+
+
+
+
+
+
+
+() 
+
+() 
+
+() 
+
+() 
+
+() 
+
+() 
+
+() 
+
+() 
+
+() 
+
+() 
+
+
+
